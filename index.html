@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>College Music Project</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <aside class="sidebar">
+      <h2>🎵 Library</h2>
+
+      <label>Search
+        <input id="search-input" placeholder="Song or Artist..." />
+      </label>
+
+      <label>Length (Cluster)
+        <select id="length-filter">
+          <option value="all">All Lengths</option>
+          <option value="Short">Short (&lt; 3:00)</option>
+          <option value="Mid">Mid (3:00–5:00)</option>
+          <option value="Long">Long (&gt; 5:00)</option>
+        </select>
+      </label>
+
+      <label>Genre
+        <select id="genre-filter">
+          <option value="all">All Genres</option>
+        </select>
+      </label>
+
+      <label>Singer / Artist
+        <select id="artist-filter">
+          <option value="all">All Artists</option>
+        </select>
+      </label>
+
+      <button id="reset-btn">Reset Filters</button>
+      <!-- <p class="hint">JSON: <code>duration_fix.json</code> — covers: <code>real_covers/&lt;video_id&gt;.jpg</code> — songs: <code>songs/&lt;title&gt;-&lt;video_id&gt;.m4a</code> (fallback to <code>songs/&lt;video_id&gt;.m4a</code> / .mp3)</p>-->
+    </aside>
+
+    <main class="main">
+      <header>
+        <h1>All Songs</h1>
+        <div id="song-count">0 songs found</div>
+      </header>
+
+      <section id="songs-container" class="grid"></section>
+    </main>
+  </div>
+
+  <div class="player-bar">
+    <div class="track">
+      <img id="player-cover" src="https://via.placeholder.com/64" alt="cover" />
+      <div class="meta">
+        <div id="player-title">Select a song</div>
+        <div id="player-artist">...</div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <audio id="audio-element" controls controlsList="nodownload"></audio>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
