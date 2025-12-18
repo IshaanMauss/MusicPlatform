@@ -1,69 +1,71 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>College Music Project</title>
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Music Universe</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="container">
-    <aside class="sidebar">
-      <h2>🎵 Library</h2>
 
-      <label>Search
-        <input id="search-input" placeholder="Song or Artist..." />
-      </label>
+    <header class="app-header">
+        <div class="header-content">
+            <div class="top-row">
+                <h1>Music<span class="highlight">Library</span></h1>
+                <div class="search-bar-container">
+                    <input type="text" id="search-input" placeholder="Search songs...">
+                    <button id="clear-search" style="display: none;">✕</button>
+                </div>
+            </div>
 
-      <label>Length (Cluster)
-        <select id="length-filter">
-          <option value="all">All Lengths</option>
-          <option value="Short">Short (&lt; 3:00)</option>
-          <option value="Mid">Mid (3:00–5:00)</option>
-          <option value="Long">Long (&gt; 5:00)</option>
-        </select>
-      </label>
+            <div class="filters-container">
+                <select id="genre-filter"><option value="all">All Genres</option></select>
+                <select id="length-filter">
+                    <option value="all">Any Length</option>
+                    <option value="Short">Short</option>
+                    <option value="Mid">Medium</option>
+                    <option value="Long">Long</option>
+                </select>
+                <button id="liked-view-btn">❤️ Liked Songs</button>
+                <button id="reset-btn">Reset</button>
+            </div>
+            
+            <div style="width: 100%; max-width: 800px;">
+                 <select id="artist-filter" style="width: 100%"><option value="all">All Artists</option></select>
+            </div>
 
-      <label>Genre
-        <select id="genre-filter">
-          <option value="all">All Genres</option>
-        </select>
-      </label>
+            <div id="song-count">Loading...</div>
+        </div>
+    </header>
 
-      <label>Singer / Artist
-        <select id="artist-filter">
-          <option value="all">All Artists</option>
-        </select>
-      </label>
-
-      <button id="reset-btn">Reset Filters</button>
-      <!-- <p class="hint">JSON: <code>duration_fix.json</code> — covers: <code>real_covers/&lt;video_id&gt;.jpg</code> — songs: <code>songs/&lt;title&gt;-&lt;video_id&gt;.m4a</code> (fallback to <code>songs/&lt;video_id&gt;.m4a</code> / .mp3)</p>-->
-    </aside>
-
-    <main class="main">
-      <header>
-        <h1>All Songs</h1>
-        <div id="song-count">0 songs found</div>
-      </header>
-
-      <section id="songs-container" class="grid"></section>
+    <main>
+        <div id="songs-container" class="grid-container">
+            </div>
     </main>
-  </div>
 
-  <div class="player-bar">
-    <div class="track">
-      <img id="player-cover" src="https://via.placeholder.com/64" alt="cover" />
-      <div class="meta">
-        <div id="player-title">Select a song</div>
-        <div id="player-artist">...</div>
-      </div>
+    <div id="audio-player-container">
+        <div class="player-wrapper">
+            <img id="player-cover" src="https://via.placeholder.com/50" alt="Cover">
+            <div class="player-info">
+                <h4 id="player-title">Select a song</h4>
+                <p id="player-artist">...</p>
+            </div>
+            
+            <button id="like-btn" class="player-control-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                </svg>
+            </button>
+
+            <audio id="audio-element" controls controlsList="nodownload" autoplay></audio>
+        </div>
     </div>
 
-    <div class="controls">
-      <audio id="audio-element" controls controlsList="nodownload"></audio>
-    </div>
-  </div>
+    <div id="toast-box">Saved to Liked Songs</div>
 
-  <script src="script.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>

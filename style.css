@@ -1,96 +1,475 @@
-:root{
-  --bg:#071428;
-  --card:#0b2030;
-  --muted:#9fb0c4;
-  --accent:#64da7d;
-}
-*{box-sizing:border-box}
-body{
-  margin:0;
-  font-family:Inter,system-ui,Segoe UI,Roboto,Arial;
-  background:linear-gradient(180deg,#041021,#071428);
-  color:#e6eef6;
-  min-height:100vh;
-}
-.container{
-  display:grid;
-  grid-template-columns:260px 1fr;
-  gap:18px;
-  padding:18px;
-  padding-bottom:120px;
-}
-.sidebar{
-  background:var(--card);
-  padding:14px;
-  border-radius:10px;
-  box-shadow:0 8px 24px rgba(0,0,0,0.5);
-}
-.sidebar h2{margin:0 0 10px}
-.sidebar label{display:block;margin-bottom:10px;font-size:13px;color:var(--muted)}
-.sidebar input, .sidebar select{
-  width:100%;
-  padding:8px 10px;
-  border-radius:8px;
-  border:1px solid rgba(255,255,255,0.04);
-  background:rgba(255,255,255,0.02);
-  color:inherit;
-}
-#reset-btn{
-  width:100%;
-  margin-top:8px;
-  padding:9px;
-  border-radius:8px;
-  border:none;
-  background:#123654;
-  color:var(--accent);
-  cursor:pointer;
-}
-.hint{font-size:12px;color:var(--muted);margin-top:10px}
-
-.main{padding:8px}
-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
-#song-count{color:var(--muted);font-size:13px}
-
-.grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
-  gap:12px;
+/* =========================================
+   1. GLOBAL VARIABLES & RESET
+   ========================================= */
+:root {
+    /* CONCERT THEME PALETTE */
+    --accent-color: rgb(71, 208, 208);        /* Cyan Neon for highlights */
+    --accent-glow: #00ffff;      /* The glow color */
+    --text-primary: #ffffff;
+    --text-secondary: #e0e0e0;
+    
+    --bg-card: rgba(255, 255, 255, 0.08); /* Frosted Glass Card */
+    --bg-hover: rgba(255, 255, 255, 0.15); /* Brighter Glass on Hover */
+    --bg-header: rgba(0, 0, 0, 0.6);      /* Dark See-through Header */
+    
+    --font-heading: 'Montserrat', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    
+    --player-height: 85px; 
+    --glass-blur: 15px;
 }
 
-.card{
-  background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-  padding:10px;
-  border-radius:10px;
-  cursor:pointer;
-  display:flex;
-  flex-direction:column;
-  min-height:220px;
-  box-shadow:0 6px 18px rgba(0,0,0,0.5);
-}
-.card img{width:100%;height:130px;object-fit:cover;border-radius:8px;margin-bottom:8px}
-.card h3{margin:0;font-size:15px}
-.card p{margin:4px 0 8px;color:var(--muted);font-size:13px}
-.tags{margin-top:auto;display:flex;gap:8px;flex-wrap:wrap}
-.tag{font-size:12px;padding:4px 8px;border-radius:999px;background:rgba(255,255,255,0.02);color:var(--muted)}
-.tag.len{color:var(--accent)}
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
-.player-bar{
-  position:fixed;
-  left:18px; right:18px; bottom:18px;
-  background:linear-gradient(180deg,#071a2a,#05121b);
-  padding:10px 14px;
-  border-radius:12px;
-  display:flex;align-items:center;justify-content:space-between;gap:12px;
-  box-shadow:0 10px 30px rgba(0,0,0,0.6);
+/* =========================================
+   2. LIVE ANIMATED BACKGROUND
+   ========================================= */
+body {
+    font-family: var(--font-body);
+    color: var(--text-primary);
+    padding-top: 220px; 
+    padding-bottom: 120px;
+
+    /* THE MAGIC: Animated "Stage Light" Gradient */
+    background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e, #000000);
+    background-size: 400% 400%;
+    animation: stageLights 15s ease infinite;
+    
+    /* Ensure background stays fixed while scrolling */
+    background-attachment: fixed; 
 }
-.track{display:flex;gap:12px;align-items:center}
-.track img{width:64px;height:64px;border-radius:6px;object-fit:cover}
-.track .meta{min-width:200px}
-#player-title{font-weight:600}
-#player-artist{color:var(--muted);font-size:13px}
-.controls audio{width:420px}
-@media (max-width:900px){
-  .container{grid-template-columns:1fr}
-  .controls audio{width:240px}
-  .player-bar{left:10px;right:10px}
+
+@keyframes stageLights {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* =========================================
+   3. NEON TITLE EFFECT
+   ========================================= */
+.app-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 100;
+    background-color: var(--bg-header);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 10px 0;
+    box-shadow: 0 4px 30px rgba(0,0,0,0.5);
+}
+
+.header-content {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+}
+
+/* Row 1: Title & Search */
+.top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    gap: 20px;
+}
+
+/* NEON FLICKER ANIMATION FOR TITLE */
+h1 {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    
+    /* The Neon Glow */
+    text-shadow: 
+        0 0 5px #fff, 
+        0 0 10px #fff, 
+        0 0 20px var(--accent-glow), 
+        0 0 40px var(--accent-glow), 
+        0 0 80px var(--accent-glow);
+        
+    animation: neonFlicker 3s infinite alternate;
+}
+
+.highlight {
+    color: #ff7676; /* Keep white core for maximum brightness */
+}
+
+@keyframes neonFlicker {
+    0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+        text-shadow: 
+            0 0 5px #fff, 
+            0 0 10px #fff, 
+            0 0 20px var(--accent-glow), 
+            0 0 40px var(--accent-glow), 
+            0 0 80px var(--accent-glow);
+        opacity: 1;
+    }
+    20%, 24%, 55% {
+        text-shadow: none;
+        opacity: 0.6; /* Dim slightly to simulate flicker */
+    }
+}
+
+/* =========================================
+   4. SEARCH & FILTERS
+    ========================================= */
+    /* =========================================
+   4. SEARCH & FILTERS (FIXED)
+   ========================================= */
+.search-bar-container {
+    flex-grow: 1;
+    max-width: 100%;
+}
+
+#search-input {
+    width: 100%;
+    padding: 10px 18px;
+    border-radius: 50px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background-color: rgba(0, 0, 0, 0.5); 
+    color: white;
+    font-size: 0.95rem;
+    transition: all 0.3s;
+}
+
+#search-input:focus { 
+    outline: none; 
+    border-color: var(--accent-color); 
+    box-shadow: 0 0 15px var(--accent-color); 
+}
+
+#clear-search { 
+    position: absolute; right: 15px; top: 50%; transform: translateY(-50%); 
+    background: none; border: none; color: #fff; cursor: pointer; 
+}
+
+/* Filter Grid Layout */
+.filters-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr; /* 4 Equal columns */
+    gap: 10px;
+    width: 100%;
+    max-width: 800px;
+}
+
+/* THE FIX Part 1: 
+   We now target BOTH the selects inside the container 
+   AND the #artist-filter which is outside.
+*/
+.filters-container select, 
+#artist-filter {
+    appearance: none;
+    -webkit-appearance: none; /* Fix for Safari */
+    
+    background-color: rgba(255, 255, 255, 0.1); /* Glassy Buttons */
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    padding: 10px 15px;
+    font-size: 0.85rem;
+    width: 100%;
+    cursor: pointer;
+    
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: 0.3s;
+    font-family: var(--font-body);
+
+    /* Custom Arrow Icon (Optional: Ensures arrow is visible on dark bg) */
+    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23FFFFFF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    background-size: 10px;
+    padding-right: 30px; /* Make space for the arrow */
+}
+
+/* Hover effects */
+.filters-container select:hover, 
+#artist-filter:hover {
+    background-color: rgba(255, 255, 255, 0.25);
+    border-color: #fff;
+}
+
+/* THE FIX Part 2: 
+   Force the dropdown list (options) to be black with white text.
+   This fixes the "White Box" issue when you click the button.
+*/
+.filters-container select option, 
+#artist-filter option {
+    background-color: #000000; /* Solid Black Background */
+    color: #ffffff;            /* White Text */
+}
+
+/* Reset Button */
+#reset-btn {
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid var(--accent-color);
+    background-color: transparent;
+    color: var(--accent-color);
+    font-weight: 800;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.1);
+    transition: 0.3s;
+    width: 100%;
+}
+
+#reset-btn:hover {
+    background-color: var(--accent-color);
+    color: #000;
+    box-shadow: 0 0 20px var(--accent-color);
+}
+
+#song-count { font-size: 0.75rem; color: #ccc; margin-top: 5px; }
+
+/* Mobile Adjustment */
+@media (max-width: 600px) {
+    .filters-container {
+        grid-template-columns: 1fr 1fr; /* 2x2 grid on phone */
+    }
+}
+/* =========================================
+   5. GLASS CARDS
+   ========================================= */
+main {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 25px;
+}
+
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 25px;
+}
+
+.card {
+    background-color: var(--bg-card); /* Frosted Glass */
+    backdrop-filter: blur(5px);       /* Blur background behind card */
+    padding: 15px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: transform 0.3s ease, background-color 0.3s ease;
+    cursor: pointer;
+}
+
+.card:hover { 
+    transform: translateY(-5px);
+    background-color: var(--bg-hover);
+    border-color: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.card img {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+}
+
+.card h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 4px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card p { color: #bbb; font-size: 0.8rem; margin-bottom: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.tags { display: flex; gap: 6px; }
+.tag { font-size: 0.65rem; padding: 3px 8px; border-radius: 4px; background-color: rgba(0,0,0,0.6); color: #ddd; border: 1px solid rgba(255,255,255,0.1); }
+
+/* =========================================
+   6. BOTTOM PLAYER (Glass)
+   ========================================= */
+#audio-player-container {
+    position: fixed; bottom: 0; left: 0; width: 100%;
+    height: var(--player-height);
+    background-color: rgba(10, 10, 15, 0.9); /* Deep dark glass */
+    backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    z-index: 200; display: flex; align-items: center; padding: 0 30px;
+    box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
+}
+
+.player-wrapper {
+    max-width: 1200px; width: 100%; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between; gap: 20px;
+}
+
+#player-cover { height: 55px; width: 55px; border-radius: 6px; object-fit: cover; box-shadow: 0 0 15px rgba(255,255,255,0.1); }
+.player-info { flex: 1; min-width: 0; margin-right: 15px; }
+#player-title { font-size: 1rem; color: #fff; font-weight: 700; }
+#player-artist { font-size: 0.8rem; color: #aaa; }
+audio { height: 35px; width: 100%; max-width: 450px; outline: none; opacity: 0.9; }
+
+/* =========================================
+   7. MOBILE ADJUSTMENTS
+   ========================================= */
+@media (max-width: 600px) {
+    body { padding-top: 250px; }
+
+    .top-row { flex-direction: column; align-items: flex-start; gap: 12px; }
+    
+    /* Neon title smaller on mobile */
+    h1 { font-size: 1.5rem; width: 100%; text-align: center; }
+    
+    .filters-container { grid-template-columns: 1fr 1fr; }
+    #artist-filter { grid-column: 1 / -1; } /* Full width artist */
+    #reset-btn { grid-column: 1 / -1; }     /* Full width reset */
+    
+    .grid-container { grid-template-columns: repeat(2, 1fr); gap: 15px; }
+    #player-cover { display: none; }
+}
+/* =========================================
+   8. ACTIVE SONG RIPPLE EFFECT (NEW)
+   ========================================= */
+
+/* Ensure the card is a reference point for the ripples placed behind it */
+.card {
+    position: relative;
+    z-index: 1; /* Ensure card content stays on top */
+    overflow: visible; /* Let ripples extend outside the card boundary */
+}
+
+/* The 'stone dropped in water' animation */
+@keyframes stoneRipple {
+    0% {
+        width: 0;
+        height: 0;
+        opacity: 0.8;
+        border-width: 4px;
+    }
+    100% {
+        width: 250%; /* Expand way outside the card */
+        height: 250%;
+        opacity: 0; /* Fade out completely */
+        border-width: 1px; /* Border gets thinner as it expands */
+    }
+}
+
+/* Create the ripple using pseudo-elements behind the playing card */
+.card.playing-card::before,
+.card.playing-card::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%); /* Center behind card */
+    border-radius: 50%; /* Make it circular */
+    background: transparent;
+    border: 2px solid var(--accent-color); /* Neon Cyan rings */
+    box-shadow: 0 0 20px var(--accent-glow), inset 0 0 20px var(--accent-glow); /* Neon glow */
+    z-index: -1; /* Place BEHIND the glass card */
+    animation: stoneRipple 3s ease-out infinite; /* Run the animation forever */
+}
+
+/* Delay the second ripple slightly for a continuous wave effect */
+.card.playing-card::after {
+    animation-delay: 1.5s;
+}
+
+/* Optional: Make the playing card border glow slightly */
+.card.playing-card {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
+}
+
+/* =========================================
+   9. LIKE FEATURE & TOAST (NEW)
+   ========================================= */
+
+/* "Liked Songs" Header Button */
+#liked-view-btn {
+    padding: 10px 15px;
+    border-radius: 8px;
+    border: 1px solid #ff4081;
+    background-color: rgba(255, 64, 129, 0.1);
+    color: #ff4081;
+    font-weight: 700;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+#liked-view-btn:hover, #liked-view-btn.active {
+    background-color: #ff4081;
+    color: white;
+    box-shadow: 0 0 15px rgba(255, 64, 129, 0.4);
+}
+
+/* Player Heart Button */
+.player-control-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    margin-right: 15px;
+    color: #aaa; /* Default gray */
+    transition: transform 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.player-control-btn svg {
+    width: 28px;
+    height: 28px;
+}
+
+.player-control-btn:hover {
+    transform: scale(1.2);
+    color: #fff;
+}
+
+/* When Liked (Active State) */
+.player-control-btn.liked {
+    color: #ff4081; /* Pink/Red */
+    animation: heartPop 0.3s ease-out;
+}
+
+.player-control-btn.liked svg {
+    fill: #ff4081; /* Fill it solid */
+    stroke: none;
+}
+
+@keyframes heartPop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.4); }
+    100% { transform: scale(1); }
+}
+
+/* Toast Notification (Popup) */
+#toast-box {
+    visibility: hidden;
+    min-width: 250px;
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    border-radius: 50px;
+    padding: 16px;
+    position: fixed;
+    z-index: 1000;
+    left: 50%;
+    bottom: 100px; /* Above the player */
+    transform: translateX(-50%);
+    font-size: 0.9rem;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    border: 1px solid var(--accent-color);
+    opacity: 0;
+    transition: opacity 0.5s, bottom 0.5s;
+}
+
+#toast-box.show {
+    visibility: visible;
+    opacity: 1;
+    bottom: 110px; /* Slide up slightly */
 }

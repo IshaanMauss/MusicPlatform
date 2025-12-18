@@ -1,4 +1,32 @@
-songs/
-node_modules/
-.DS_Store
+# --- Large Media (Audio & Images) ---
 real_covers/
+songs/
+*.mp3
+*.wav
+*.flac
+*.ogg
+*.m4a
+
+# --- Utility Scripts & Old Data ---
+resize_covers.py
+songs_db.json
+
+# --- Python Junk (Temporary files) ---
+__pycache__/
+*.pyc
+venv/
+.env
+
+# --- Security (CRITICAL) ---
+*.session
+*.session-journal
+
+# --- System Junk ---
+.DS_Store
+
+fix_db.py
+hydra.py
+find_songs.py
+force_upload.py
+
+*.bak
