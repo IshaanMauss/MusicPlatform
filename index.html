@@ -1,14 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Music Universe</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&family=Urbanist:wght@400;500;600&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
     <header class="app-header">
@@ -22,7 +26,9 @@
             </div>
 
             <div class="filters-container">
-                <select id="genre-filter"><option value="all">All Genres</option></select>
+                <select id="genre-filter">
+                    <option value="all">All Genres</option>
+                </select>
                 <select id="length-filter">
                     <option value="all">Any Length</option>
                     <option value="Short">Short</option>
@@ -32,9 +38,11 @@
                 <button id="liked-view-btn">❤️ Liked Songs</button>
                 <button id="reset-btn">Reset</button>
             </div>
-            
+
             <div style="width: 100%; max-width: 800px;">
-                 <select id="artist-filter" style="width: 100%"><option value="all">All Artists</option></select>
+                <select id="artist-filter" style="width: 100%">
+                    <option value="all">All Artists</option>
+                </select>
             </div>
 
             <div id="song-count">Loading...</div>
@@ -42,25 +50,55 @@
     </header>
 
     <main>
-        <div id="songs-container" class="grid-container">
+        <div id="home-view">
+            <section class="playlist-section">
+                <h2 class="section-title">Curated For You</h2>
+                <div id="playlists-row" class="playlist-row">
+                </div>
+            </section>
+
+            <section class="all-songs-section">
+                <h2 class="section-title">The Masterpiece Montage</h2>
+                <div id="songs-container" class="grid-container">
+                </div>
+            </section>
+        </div>
+
+        <div id="secondary-view" class="hidden">
+            <div class="view-header">
+                <button id="back-home-btn" class="nav-btn">← Back to Home</button>
+                <h2 id="view-title">Playlist Name</h2>
             </div>
+
+            <div id="liked-actions" class="action-bar hidden">
+                <button id="delete-selected-btn" class="danger-btn">Delete Selected</button>
+                <button id="delete-all-btn" class="danger-btn outline">Delete All</button>
+            </div>
+
+            <div id="list-container" class="list-layout"></div>
+        </div>
     </main>
 
     <div id="audio-player-container">
         <div class="player-wrapper">
-            <img id="player-cover" src="https://via.placeholder.com/50" alt="Cover">
-            <div class="player-info">
-                <h4 id="player-title">Select a song</h4>
-                <p id="player-artist">...</p>
+            <div class="player-left">
+                <img id="player-cover" src="https://placehold.co/50?text=Music" alt="Cover">
+                <div class="player-info">
+                    <h4 id="player-title">Select a song</h4>
+                    <p id="player-artist">...</p>
+                </div>
             </div>
-            
-            <button id="like-btn" class="player-control-btn">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                </svg>
-            </button>
 
-            <audio id="audio-element" controls controlsList="nodownload" autoplay></audio>
+            <div class="player-controls">
+                <button id="like-btn" class="player-control-btn" title="Like this song">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path
+                            d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
+                        </path>
+                    </svg>
+                </button>
+                <audio id="audio-element" controls controlsList="nodownload" autoplay></audio>
+            </div>
         </div>
     </div>
 
@@ -68,4 +106,5 @@
 
     <script src="script.js"></script>
 </body>
+
 </html>
