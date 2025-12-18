@@ -308,7 +308,7 @@ function playSong(song) {
   if (playerTitle) playerTitle.textContent = song.title;
   if (playerArtist) playerArtist.textContent = song.artist_name;
   if (playerCover) {
-    playerCover.src = `real_covers/${song.video_id}.jpg`;
+    playerCover.src = `covers_small/${song.video_id}.jpg`;
     playerCover.onerror = () => playerCover.src = 'https://via.placeholder.com/64?text=Music';
   }
 
