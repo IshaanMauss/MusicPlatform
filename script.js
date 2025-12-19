@@ -2,7 +2,8 @@
 // 1. GLOBAL VARIABLES & CONFIGURATION
 // ============================================
 let allSongs = [];
-let currentFilteredSongs = [];
+let currentFilteredSongs = []; // Tracks songs visible in Grid
+let playbackQueue = [];        // Tracks the songs currently playing (Context)
 let currentLimit = 50;
 const LOAD_CHUNK = 50;
 const SERVER_URL = "https://music-backend-service.onrender.com";
@@ -34,6 +35,7 @@ const playerTitle = document.getElementById('player-title');
 const playerArtist = document.getElementById('player-artist');
 const playerCover = document.getElementById('player-cover');
 const likeBtn = document.getElementById('like-btn');
+const nextBtn = document.getElementById('next-btn'); // New Button
 const toastBox = document.getElementById('toast-box');
 
 // STATE
@@ -116,6 +118,7 @@ async function loadData() {
         });
 
         currentFilteredSongs = allSongs;
+        playbackQueue = allSongs; // Default queue
         renderHomeGrid(currentFilteredSongs);
         renderPlaylistsRow();
         populateDropdowns();
@@ -152,6 +155,7 @@ function renderPlaylistsRow() {
                 <span>${pl.subtitle || 'Tap to listen'}</span>
             </div>
         `;
+        // Pass the playlist songs as the queue
         card.onclick = () => openPlaylistView(pl, plSongs);
         playlistsRow.appendChild(card);
     });
@@ -160,19 +164,35 @@ function renderPlaylistsRow() {
 function renderHomeGrid(songs, append = false) {
     if (!append) songsContainer.innerHTML = '';
     
+    // --- NEW: FANCY EMPTY STATE FOR GRID ---
     if (songs.length === 0) {
-        if (!append) songsContainer.innerHTML = '<div style="color:#aaa; text-align:center; width:100%;">No songs found matching criteria.</div>';
+        if (!append) {
+            songsContainer.innerHTML = `
+                <div class="empty-state" style="grid-column: 1 / -1;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M9 17H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-4"></path>
+                        <path d="M13 13l4 4m0-4l-4 4"></path>
+                    </svg>
+                    <h3>No songs found</h3>
+                    <p>Try searching for a different artist or genre.</p>
+                </div>
+            `;
+        }
         return;
     }
+    // ---------------------------------------
 
     const chunk = append ? songs : songs.slice(0, currentLimit);
     
     chunk.forEach(song => {
         const card = document.createElement('div');
         card.className = 'card';
-        // IMPORTANT: Add ID so we can find it for the ripple effect
         card.dataset.id = song.video_id; 
         
+        if (song.video_id === currentSongId) {
+            card.classList.add('playing');
+        }
+
         card.innerHTML = `
             <img loading="lazy" src="covers_small/${song.video_id}.jpg" onerror="this.src='https://placehold.co/400?text=Music'">
             <h3>${song.title}</h3>
@@ -181,7 +201,7 @@ function renderHomeGrid(songs, append = false) {
                 <span class="tag">${song._lenCluster}</span>
             </div>
         `;
-        card.onclick = () => playSong(song);
+        card.onclick = () => playSong(song, currentFilteredSongs);
         songsContainer.appendChild(card);
     });
 }
@@ -231,13 +251,15 @@ resetBtn.addEventListener('click', () => {
 });
 
 // ============================================
-// 5. VIEW SWITCHING, PLAYER & RIPPLE LOGIC
+// 5. VIEW SWITCHING
 // ============================================
 function showHome() {
     homeView.classList.remove('hidden');
     secondaryView.classList.add('hidden');
     likedViewBtn.classList.remove('active');
     window.scrollTo(0, 0);
+    // Refresh Grid to show active ripple
+    renderHomeGrid(currentFilteredSongs);
 }
 
 function showSecondaryView(title, isLikedView = false) {
@@ -255,9 +277,9 @@ function showSecondaryView(title, isLikedView = false) {
     window.scrollTo(0, 0);
 }
 
-function openPlaylistView(playlistConfig, preFilteredSongs) {
+function openPlaylistView(playlistConfig, plSongs) {
     showSecondaryView(playlistConfig.name, false);
-    renderListView(preFilteredSongs, false);
+    renderListView(plSongs, false);
 }
 
 function openLikedView() {
@@ -267,30 +289,140 @@ function openLikedView() {
     else renderListView(likedSongs, true); 
 }
 
+// UPDATED: Render List View (With Active State)
 function renderListView(songs, showCheckboxes) {
     listContainer.innerHTML = '';
     selectedForDelete.clear();
+
+    // EMPTY STATE CHECK
+    if (songs.length === 0) {
+        listContainer.innerHTML = `
+            <div class="empty-state">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M9 17H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-4"></path>
+                    <path d="M13 13l4 4m0-4l-4 4"></path>
+                </svg>
+                <h3>No songs found</h3>
+                <p>Try clearing your filters or search for something else.</p>
+            </div>
+        `;
+        return;
+    }
+
     songs.forEach(song => {
         const row = document.createElement('div');
         row.className = 'song-row';
+        row.dataset.id = song.video_id; // IMPORTANT for finding it later
+
+        // Check if playing
+        const isPlaying = (song.video_id === currentSongId);
+        if (isPlaying) row.classList.add('playing');
+
         let checkboxHTML = showCheckboxes ? `<input type="checkbox" class="select-box" data-id="${song.video_id}">` : '';
+        
+        // Equalizer Icon (Only if playing)
+        let iconHTML = isPlaying 
+            ? `<div class="playing-icon"><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>`
+            : `<img src="covers_small/${song.video_id}.jpg" onerror="this.src='https://placehold.co/64?text=M'">`;
+
+        // If playing, we don't show the image in list view, we show the equalizer (optional choice)
+        // OR keep image and overlay. Let's keep image and add styling.
+        // Better UX: Keep image, just highlight row.
+        
         row.innerHTML = `
             ${checkboxHTML}
             <img src="covers_small/${song.video_id}.jpg" onerror="this.src='https://placehold.co/64?text=Music'">
-            <div class="song-row-info"><span class="song-row-title">${song.title}</span><span class="song-row-artist">${song.artist_name}</span></div>
+            <div class="song-row-info">
+                <span class="song-row-title">${song.title}</span>
+                <span class="song-row-artist">${song.artist_name}</span>
+            </div>
             <span class="song-row-dur">${song.duration}</span>
         `;
+
         row.addEventListener('click', (e) => {
             if (e.target.classList.contains('select-box')) {
                 const id = e.target.getAttribute('data-id');
                 e.target.checked ? selectedForDelete.add(id) : selectedForDelete.delete(id);
-            } else playSong(song);
+            } else {
+                playSong(song, songs);
+            }
         });
         listContainer.appendChild(row);
     });
 }
 
-// DELETE & LIKE LOGIC
+// ============================================
+// 6. PLAYER, QUEUE & RIPPLE
+// ============================================
+
+function playSong(song, queue = null) {
+    // 1. Remove active state from OLD Grid Card & List Row
+    if (currentSongId) {
+        const oldCard = document.querySelector(`.card[data-id="${currentSongId}"]`);
+        if (oldCard) oldCard.classList.remove('playing');
+        
+        const oldRow = document.querySelector(`.song-row[data-id="${currentSongId}"]`);
+        if (oldRow) oldRow.classList.remove('playing');
+    }
+
+    // 2. Update Queue
+    if (queue) playbackQueue = queue;
+
+    // 3. Set New ID
+    currentSongId = song.video_id;
+
+    // 4. Add active state to NEW Grid Card
+    const newCard = document.querySelector(`.card[data-id="${currentSongId}"]`);
+    if (newCard) newCard.classList.add('playing');
+
+    // 5. Add active state to NEW List Row (if visible)
+    const newRow = document.querySelector(`.song-row[data-id="${currentSongId}"]`);
+    if (newRow) newRow.classList.add('playing');
+
+    // 6. Update Player UI
+    playerTitle.textContent = song.title;
+    playerArtist.textContent = song.artist_name;
+    playerCover.src = `covers_small/${song.video_id}.jpg`;
+    audioPlayer.src = `${SERVER_URL}/play/${song.video_id}`;
+    audioPlayer.play();
+    updateHeartIcon();
+}
+
+// NEXT SONG LOGIC
+function playNextSong() {
+    if (!currentSongId || playbackQueue.length === 0) return;
+
+    // Find current index
+    const currentIndex = playbackQueue.findIndex(s => s.video_id === currentSongId);
+    
+    // Calculate next index
+    let nextIndex = currentIndex + 1;
+    if (nextIndex >= playbackQueue.length) {
+        nextIndex = 0; // Loop back to start
+    }
+
+    // Play it
+    playSong(playbackQueue[nextIndex]);
+}
+
+// EVENT LISTENERS FOR PLAYER
+nextBtn.addEventListener('click', playNextSong);
+
+audioPlayer.addEventListener('ended', () => {
+    // 1. Clean up if queue is empty
+    if (currentSongId && playbackQueue.length === 0) {
+        document.querySelector(`.card[data-id="${currentSongId}"]`)?.classList.remove('playing');
+        document.querySelector(`.song-row[data-id="${currentSongId}"]`)?.classList.remove('playing');
+    }
+    
+    // 2. ACTUALLY PLAY THE NEXT SONG
+    playNextSong(); 
+});
+
+// ============================================
+// 7. LIKES, SCROLL & HELPERS
+// ============================================
+
 if (deleteAllBtn) deleteAllBtn.onclick = () => { if (confirm("Delete ALL liked songs?")) { likedSongIds = []; saveLikes(); openLikedView(); } };
 if (deleteSelBtn) deleteSelBtn.onclick = () => { if (selectedForDelete.size === 0) return alert("Select songs first!"); likedSongIds = likedSongIds.filter(id => !selectedForDelete.has(id)); saveLikes(); openLikedView(); };
 
@@ -307,7 +439,6 @@ likeBtn.addEventListener('click', () => {
 
 function updateHeartIcon() { likedSongIds.includes(currentSongId) ? likeBtn.classList.add('liked') : likeBtn.classList.remove('liked'); }
 
-// INFINITE SCROLL
 window.addEventListener('scroll', () => {
     if (!homeView.classList.contains('hidden')) {
         const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
@@ -324,43 +455,8 @@ function loadMoreSongs() {
     renderHomeGrid(nextChunk, true);
 }
 
-// HELPERS
 backBtn.addEventListener('click', showHome);
 likedViewBtn.addEventListener('click', () => { likedViewBtn.classList.contains('active') ? showHome() : openLikedView(); });
-
-// ============================================
-// PLAYER & RIPPLE TRIGGER
-// ============================================
-function playSong(song) {
-    // 1. Remove ripple from old card
-    if (currentSongId) {
-        const oldCard = document.querySelector(`.card[data-id="${currentSongId}"]`);
-        if (oldCard) oldCard.classList.remove('playing');
-    }
-
-    // 2. Set New ID
-    currentSongId = song.video_id;
-
-    // 3. Add ripple to new card
-    const newCard = document.querySelector(`.card[data-id="${currentSongId}"]`);
-    if (newCard) newCard.classList.add('playing');
-
-    // 4. Update Player UI
-    playerTitle.textContent = song.title;
-    playerArtist.textContent = song.artist_name;
-    playerCover.src = `covers_small/${song.video_id}.jpg`;
-    audioPlayer.src = `${SERVER_URL}/play/${song.video_id}`;
-    audioPlayer.play();
-    updateHeartIcon();
-}
-
-// Stop Ripple when song ends
-audioPlayer.addEventListener('ended', () => {
-    if (currentSongId) {
-        const card = document.querySelector(`.card[data-id="${currentSongId}"]`);
-        if (card) card.classList.remove('playing');
-    }
-});
 
 function showToast(msg) { toastBox.textContent = msg; toastBox.className = "show"; setTimeout(() => toastBox.className = "", 3000); }
 function parseDurationToSeconds(d) { if (!d) return 0; const p = d.split(':'); return p.length === 2 ? (+p[0])*60 + (+p[1]) : 0; }
@@ -379,3 +475,13 @@ function populateDropdowns() {
 }
 
 document.addEventListener('DOMContentLoaded', loadData);
+
+// Global Ripple Click (Visual)
+document.addEventListener('click', function(e) {
+    const ripple = document.createElement('div');
+    ripple.className = 'ripple';
+    ripple.style.left = e.pageX + 'px';
+    ripple.style.top = e.pageY + 'px';
+    document.body.appendChild(ripple);
+    setTimeout(() => { ripple.remove(); }, 600);
+});
